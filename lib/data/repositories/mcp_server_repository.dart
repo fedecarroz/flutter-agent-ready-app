@@ -8,9 +8,11 @@ class McpServerRepository {
   McpServerRepository({
     ThemeCubit? themeCubit,
     LocationService? locationService,
+    DateTime Function()? clock,
   }) : _mcpServerService = McpServerService(
           locationService ?? LocationService(),
           themeCubit: themeCubit,
+          clock: clock,
         );
 
   /// Log lines produced by the MCP server and its tools.
