@@ -1,16 +1,25 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_mcp_example_app/data.dart';
+import 'package:flutter_mcp_example_app/logic.dart';
 
 class McpServerRepository {
-  final _mcpServerService = McpServerService(LocationService());
+  final McpServerService _mcpServerService;
 
-  McpServerRepository();
+  McpServerRepository({
+    ThemeCubit? themeCubit,
+    LocationService? locationService,
+  }) : _mcpServerService = McpServerService(
+          locationService ?? LocationService(),
+          themeCubit: themeCubit,
+        );
 
   /// Log lines produced by the MCP server and its tools.
   Stream<String> get logs => _mcpServerService.logs;
 
-  /// Emits when an MCP client asks to toggle dark mode.
-  Stream<void> get darkModeToggleRequests =>
-      _mcpServerService.darkModeToggleRequests;
+  /// Emits when an MCP client requests a theme change.
+  Stream<ThemeMode> get themeRequests => _mcpServerService.themeRequests;
+
+  ThemeCubit get themeCubit => _mcpServerService.themeCubit;
 
   bool get isRunning => _mcpServerService.isRunning;
 

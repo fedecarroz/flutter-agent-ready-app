@@ -10,8 +10,8 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppProvider(
-      child: BlocBuilder<ThemeCubit, bool>(
-        builder: (context, isDarkMode) => MaterialApp(
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) => MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Flutter MCP App',
           theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
@@ -20,7 +20,7 @@ class App extends StatelessWidget {
             brightness: Brightness.dark,
             useMaterial3: true,
           ),
-          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: themeMode,
           home: const McpServerPage(),
         ),
       ),

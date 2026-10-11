@@ -14,26 +14,22 @@ class McpServerPage extends StatefulWidget {
 }
 
 class _McpServerPageState extends State<McpServerPage> {
-  late final StreamSubscription<void> _darkModeToggleSubscription;
+  late final StreamSubscription<ThemeMode> _themeSubscription;
 
   @override
   void initState() {
     super.initState();
-    _darkModeToggleSubscription = context
+    _themeSubscription = context
         .read<McpServerRepository>()
-        .darkModeToggleRequests
-        .listen((_) => _onDarkModeToggleRequested());
+        .themeRequests
+        .listen((_) => _onThemeRequested());
   }
 
-  /// Opens the settings page (unless already open) and toggles dark mode,
-  /// with a short delay so the switch visibly flips.
-  Future<void> _onDarkModeToggleRequested() async {
+  /// Opens the settings page unless already open.
+  void _onThemeRequested() {
     if (ModalRoute.of(context)?.isCurrent ?? false) {
       _openSettings();
-      await Future<void>.delayed(const Duration(milliseconds: 400));
     }
-    if (!mounted) return;
-    context.read<ThemeCubit>().toggleDarkMode();
   }
 
   void _openSettings() {
@@ -43,7 +39,7 @@ class _McpServerPageState extends State<McpServerPage> {
 
   @override
   void dispose() {
-    _darkModeToggleSubscription.cancel();
+    _themeSubscription.cancel();
     super.dispose();
   }
 

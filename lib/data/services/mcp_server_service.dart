@@ -1,23 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_mcp/flutter_mcp.dart';
 import 'package:flutter_mcp_example_app/data.dart';
+import 'package:flutter_mcp_example_app/logic.dart';
 
-/// MCP-over-StreamableHTTP server exposing the native `get_location` tool.
+/// MCP-over-StreamableHTTP server exposing native tools.
 class McpServerService {
-  McpServerService(this._locationService);
+  McpServerService(
+    this._locationService, {
+    ThemeCubit? themeCubit,
+  }) : _themeCubit = themeCubit ?? ThemeCubit();
 
   final LocationService _locationService;
+  final ThemeCubit _themeCubit;
   final _logs = StreamController<String>.broadcast();
-  final _darkModeToggleRequests = StreamController<void>.broadcast();
+  final _themeRequests = StreamController<ThemeMode>.broadcast();
   String? _serverId;
   bool _initialized = false;
 
   Stream<String> get logs => _logs.stream;
 
-  /// Emits when an MCP client calls `toggle_dark_mode`.
-  Stream<void> get darkModeToggleRequests => _darkModeToggleRequests.stream;
+  /// Emits when an MCP client requests a theme change.
+  Stream<ThemeMode> get themeRequests => _themeRequests.stream;
+
+  ThemeCubit get themeCubit => _themeCubit;
+
   bool get isRunning => _serverId != null;
 
   Future<void> start(int port) async {
@@ -66,10 +75,19 @@ class McpServerService {
         handler: _handleGetLocation,
       )
       ..addTool(
-        name: 'toggle_dark_mode',
-        description: 'Apre la pagina impostazioni dell\'app e attiva/disattiva la dark mode.',
-        inputSchema: const {'type': 'object', 'properties': {}},
-        handler: _handleToggleDarkMode,
+        name: 'set_theme',
+        description: 'Imposta il tema dell\'app: chiaro o scuro',
+        inputSchema: const {
+          'type': 'object',
+          'properties': {
+            'mode': {
+              'type': 'string',
+              'enum': ['light', 'dark'],
+            },
+          },
+          'required': ['mode'],
+        },
+        handler: handleSetTheme,
       );
     FlutterMCP.instance.connectServer(serverId);
     _serverId = serverId;
@@ -96,13 +114,27 @@ class McpServerService {
     }
   }
 
-  Future<CallToolResult> _handleToggleDarkMode(
+  Future<CallToolResult> handleSetTheme(
     Map<String, dynamic> arguments,
   ) async {
-    _logs.add('Tool ← toggle_dark_mode');
-    _darkModeToggleRequests.add(null);
-    _logs.add('Tool → dark mode commutata');
-    return CallToolResult(content: [TextContent(text: 'Dark mode commutata')]);
+    _logs.add('Tool ← set_theme ${jsonEncode(arguments)}');
+    final mode = arguments['mode'];
+    if (mode is! String || (mode != 'light' && mode != 'dark')) {
+      const errorMessage =
+          'Parametro "mode" non valido o mancante. Valori ammessi: "light", "dark".';
+      _logs.add('Tool → errore: $errorMessage');
+      return CallToolResult(
+        content: [TextContent(text: errorMessage)],
+        isError: true,
+      );
+    }
+
+    final themeMode = mode == 'dark' ? ThemeMode.dark : ThemeMode.light;
+    _themeCubit.setTheme(themeMode);
+    _themeRequests.add(themeMode);
+    final statusText = 'Tema attivo: $mode';
+    _logs.add('Tool → $statusText');
+    return CallToolResult(content: [TextContent(text: statusText)]);
   }
 
   Future<void> stop() async {
@@ -116,6 +148,6 @@ class McpServerService {
   Future<void> dispose() async {
     await stop();
     await _logs.close();
-    await _darkModeToggleRequests.close();
+    await _themeRequests.close();
   }
 }

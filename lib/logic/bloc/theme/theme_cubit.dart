@@ -1,8 +1,15 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
 
-/// Holds whether dark mode is enabled.
-class ThemeCubit extends Cubit<bool> {
-  ThemeCubit() : super(false);
+/// Holds the current app [ThemeMode].
+class ThemeCubit extends Cubit<ThemeMode> {
+  ThemeCubit([super.initialMode = ThemeMode.light]);
 
-  void toggleDarkMode() => emit(!state);
+  /// Sets the app theme to [mode].
+  ///
+  /// If the current theme already matches [mode], does nothing.
+  void setTheme(ThemeMode mode) {
+    if (state == mode) return;
+    emit(mode);
+  }
 }
