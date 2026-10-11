@@ -8,10 +8,8 @@ import 'package:flutter_mcp_example_app/logic.dart';
 
 /// MCP-over-StreamableHTTP server exposing native tools.
 class McpServerService {
-  McpServerService(
-    this._locationService, {
-    ThemeCubit? themeCubit,
-  }) : _themeCubit = themeCubit ?? ThemeCubit();
+  McpServerService(this._locationService, {ThemeCubit? themeCubit})
+    : _themeCubit = themeCubit ?? ThemeCubit();
 
   final LocationService _locationService;
   final ThemeCubit _themeCubit;
@@ -42,16 +40,12 @@ class McpServerService {
       _initialized = true;
     }
     final serverId = await FlutterMCP.instance.createServer(
-      name: 'flutter-location-mcp',
+      name: 'flutter-custom-mcp',
       version: '1.0.0',
       capabilities: ServerCapabilities(tools: ToolsCapability()),
       config: MCPServerConfig(
-        name: 'flutter-location-mcp',
+        name: 'flutter-custom-mcp',
         version: '1.0.0',
-        // SSE transport left behind deliberately: mcp_server 2.2.3's
-        // SseServerTransport.close() iterates its live session map and calls
-        // close() on responses with a pending flush, so stopping throws an
-        // uncatchable async error and never closes the HttpServer (port leaks).
         transportType: 'streamablehttp',
         streamableHttpPort: port,
         host: '0.0.0.0',
@@ -114,9 +108,7 @@ class McpServerService {
     }
   }
 
-  Future<CallToolResult> handleSetTheme(
-    Map<String, dynamic> arguments,
-  ) async {
+  Future<CallToolResult> handleSetTheme(Map<String, dynamic> arguments) async {
     _logs.add('Tool ← set_theme ${jsonEncode(arguments)}');
     final mode = arguments['mode'];
     if (mode is! String || (mode != 'light' && mode != 'dark')) {
